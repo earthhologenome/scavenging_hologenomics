@@ -15,7 +15,7 @@ Scavenging is an extreme dietary strategy that requires immune adaptations to co
 
 The first step fetches all relevant data and generates a data.Rdata file in the data directory.
 
-- **[Rmd code](https://github.com/earthhologenome/scavenging_hologenomics/blob/main/1-prepare_data.Rmd)** | **[HTML render](https://htmlpreview.github.io/?https://github.com/earthhologenome/scavenging_hologenomics/blob/main/1-prepare_data.html)**
+- **[Rmd code](https://github.com/earthhologenome/scavenging_hologenomics/blob/main/1-data_preparation.Rmd)** | **[HTML render](https://htmlpreview.github.io/?https://github.com/earthhologenome/scavenging_hologenomics/blob/main/1-data_preparation.html)**
 
 ### 2- Genome catalogue overview
 
