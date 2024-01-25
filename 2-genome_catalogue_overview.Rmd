@@ -162,6 +162,7 @@ grid.arrange(grobs = list(genome_completeness,genome_biplot,genome_contamination
                               c(2,2,2,2,2,2,2,2,2,2,2,3)))
 
 ```
+
 ## Functional overview
 
 ```{r function_heatmap, message=FALSE, warning=FALSE, fig.height=10, fig.width=10, fig.fullwidth=TRUE}
