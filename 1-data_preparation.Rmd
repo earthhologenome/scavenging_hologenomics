@@ -1,5 +1,5 @@
 ---
-title: "1-data_preparation"
+title: "1 - Data preparation"
 author: "Antton Alberdi"
 date: "2024-01-25"
 output: html_document
@@ -112,8 +112,8 @@ genome_annotations <- airtable("MAGs", "appWbHBNLE6iAsMRV") %>% #get base ID fro
 ### Distil functional annotations
 Raw functional annotations are distilled into genome-inferred functional traits to generate biologically more meaningful functional traits for downstream analyses.
 
-```{r distill_annotations, echo=FALSE, warning=FALSE, comments="", message=FALSE, results='hide'}
-genome_gifts <- distill(genome_annotations,GIFT_db,genomecol=2,annotcol=c(9,10,19))
+```{r distill_annotations, warning=FALSE, comments="", message=FALSE, results='hide'}
+genome_gifts <- distill(genome_annotations,GIFT_db,genomecol=2,annotcol=c(9,10,19), verbosity=F)
 ```
 
 ## Wrap working objects
