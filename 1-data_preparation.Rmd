@@ -1,0 +1,124 @@
+---
+title: "1-data_preparation"
+author: "Antton Alberdi"
+date: "2024-01-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+The operations conducted in this pipeline require the following R packages that need to be installed beforehand. For details about R package installation you can visit [this tutorial](https://www.dataquest.io/blog/install-package-r/).
+
+```{r libraries, warning=FALSE, comments="", message=FALSE}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ape))
+suppressPackageStartupMessages(library(R.utils))
+suppressPackageStartupMessages(library(rairtable))
+suppressPackageStartupMessages(library(distillR))
+```
+
+## Define variables
+While the analysis pipeline is rather standardised, the source of the data files and other parameters might need to be adjusted to fetch the corret data. EHI data generation is conducted in batches (DMB0000), and stored in ERDA. If you know the batch number, the working documents can be downloaded from ERDA directly from R. First, let's generate the file URLs by combining the starndard information with the batch number.
+
+```{r parameters, warning=FALSE, comments="", message=FALSE}
+batch="DMB0117"
+read_counts_file=str_glue("https://sid.erda.dk/share_redirect/BaMZodj9sA/DMB/{batch}/{batch}_counts.tsv.gz")
+genome_coverage_file=str_glue("https://sid.erda.dk/share_redirect/BaMZodj9sA/DMB/{batch}/{batch}_coverage.tsv.gz")
+genome_metadata_file=str_glue("https://sid.erda.dk/share_redirect/BaMZodj9sA/DMB/{batch}/{batch}_mag_info.tsv.gz")
+tree_file=str_glue("https://sid.erda.dk/share_redirect/BaMZodj9sA/DMB/{batch}/{batch}.tree.gz")
+sample_metadata_file=str_glue("https://sid.erda.dk/share_redirect/BaMZodj9sA/DMB/{batch}/{batch}_metadata.tsv.gz")
+```
+
+## Load data objects
+The next step is to load the data objects directly from ERDA.
+
+### Read counts
+This is a matrix containing quantitative information about the number of sequencing reads from each sample that have been mapped to each genome. Note that this is the raw data that needs to be further processed before running any statistics on them.
+
+```{r read_counts, warning=FALSE, comments="", message=FALSE}
+read_counts <- read_tsv(read_counts_file) %>% 
+  rename(genome=1) #rename first column to "genome"
+```
+
+### Genome coverage
+This is a matrix containing quantitative information about the fraction of each genome hit at least by one read in each sample. In a later stage, genomes that have less than 30% of their length covered by reads are turned into zeros to account for the random allocation of reads across genomes due to mapping heuristics.
+
+```{r genome_coverage, warning=FALSE, comments="", message=FALSE}
+genome_coverage <- read_tsv(genome_coverage_file) %>% 
+  rename(genome=1) #rename first column to "genome"
+```
+
+### Genome metadata
+It contains relevant metadata of the genomes, including taxonomy, genome completeness, contamination/redundancy and length.
+
+```{r genome_metadata, warning=FALSE, comments="", message=FALSE}
+genome_metadata <- read_tsv(genome_metadata_file) %>%
+    rename(length=mag_size)  %>%
+    arrange(genome, match(genome,read_counts)) # sort according to read_counts
+```
+
+### Genome tree
+This is the phylogenetic tree of the genomes derived from the GTDB master tree after pruning all reference genomes. This file is used for phylogenetic analyses.
+
+```{r genome_tree, warning=FALSE, comments="", message=FALSE}
+download.file(tree_file,str_glue("{batch}.tree.gz")) 
+genome_tree <- read.tree(str_glue("{batch}.tree.gz") %>% gunzip())
+file.remove(str_glue("{batch}.tree"))
+```
+
+### Sample metadata
+It contains relevant metadata of the samples, including geographic origin, host species, sample type and statistics of sample preprocessing.
+
+```{r sample_metadata, warning=FALSE, comments="", message=FALSE}
+sample_metadata <- read_tsv(sample_metadata_file)
+```
+
+### Coverage filtering
+Genomes that have less than 30% of their length covered by reads are turned into zeros to account for the random allocation of reads across genomes due to mapping heuristics. 
+
+```{r filter_coverage, warning=FALSE, comments="", message=FALSE}
+min_coverage=0.3
+read_counts_filt <- genome_coverage %>%
+  mutate(across(where(is.numeric), ~ ifelse(. > min_coverage, 1, 0))) %>%
+  mutate(across(-1, ~ . * read_counts[[cur_column()]])) 
+```
+
+### Generate genome count table
+After filtering the low-coverage reads, read counts are transformed into genome counts using genome-length and read-length information.
+
+```{r calc_genometable, warning=FALSE, comments="", message=FALSE}
+readlength=150 #change if sequencing read length is different
+genome_counts <- read_counts_filt %>%
+  mutate(across(where(is.numeric), ~ . / (genome_metadata$length / readlength) ))
+```
+
+### Genome annotations
+Raw annotations of the genomes are retrieved from the EHI database, and merged into a single file.
+
+```{r genome_annotations, warning=FALSE, comments="", message=FALSE}
+genome_annotations <- airtable("MAGs", "appWbHBNLE6iAsMRV") %>% #get base ID from Airtable browser URL
+  read_airtable(., fields = c("ID","mag_name","number_genes","anno_url"), id_to_col = TRUE) %>% #get 3 columns from MAGs table
+  filter(mag_name %in% paste0(genome_metadata$genome,".fa")) %>% #filter by MAG name
+  filter(number_genes > 0) %>% #genes need to exist
+  select(anno_url) %>% #list MAG annotation urls
+  pull() %>%
+  read_tsv() %>% #load all tables
+  rename(gene=1, genome=2, contig=3) #rename first 3 columns
+```
+
+### Distil functional annotations
+Raw functional annotations are distilled into genome-inferred functional traits to generate biologically more meaningful functional traits for downstream analyses.
+
+```{r distill_annotations, echo=FALSE, warning=FALSE, comments="", message=FALSE, results='hide'}
+genome_gifts <- distill(genome_annotations,GIFT_db,genomecol=2,annotcol=c(9,10,19))
+```
+
+## Wrap working objects
+In the last step, the objects that are needed for downstream analyses are stored in an R object.
+
+```{r wrap_objects, warning=FALSE, comments="", message=FALSE}
+save(read_counts, genome_counts, genome_tree, genome_metadata, genome_gifts, sample_metadata, file = "data/data.Rdata")
+```
