@@ -2,6 +2,9 @@
 
 Scavenging is an extreme dietary strategy that requires immune adaptations to cope with the diverse microorganisms that grow in animal carcases. Some years ago, New World vultures were shown to possess a specialised microbiome that was hypothesised could enable them to cope with such conditions. This project aims to address this question by not only studying genomic features of bacterial communities, but also their gene expression and the expression of host vultures.
 
+![Earth Hologenome Initiative > Scavenger Hologenomics](https://www.earthhologenome.org/assets/images/scavenger-hologenomics-1531x405.png)
+
+
 - **Coordinator:** University of Copenhagen
 - **Participants:** Smithsonian Museum of Natural History
 - **Funding:** Carlsberg foundation
