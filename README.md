@@ -23,12 +23,12 @@ Overview of the taxonomic, phylogenetic and functional attributes of the genome 
 
 - **[Rmd code](https://github.com/earthhologenome/scavenging_hologenomics/blob/main/2-genome_catalogue_overview.Rmd)** | **[HTML render](https://htmlpreview.github.io/?https://github.com/earthhologenome/scavenging_hologenomics/blob/main/2-genome_catalogue_overview.html)**
 
-3. Composition overview
+### 3. Composition overview
 Overview of the composition and diversity of microbial communities.
 
-**Rmd code** | **HTML render**
+- **Rmd code** | **HTML render**
 
-4. Differential abundance 
+### 4. Differential abundance analysis
 Microbiota differences between species and gut sites.
 
-**Rmd code** | **HTML render**
+- **Rmd code** | **HTML render**
